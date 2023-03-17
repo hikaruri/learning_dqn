@@ -119,7 +119,7 @@ def optimize_model():
     torch.nn.utils.clip_grad_value_(policy_net.parameters(), 100)
     optimizer.step()
 
-num_episodes = 3000
+num_episodes = 2000
 
 for i_episode in range(num_episodes):
     # Initialize the environment and get it's state
