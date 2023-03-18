@@ -3,12 +3,11 @@ import math
 import random
 from itertools import count
 import datetime
+import os
 
 import gymnasium as gym
 import matplotlib.pyplot as plt
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
 import torch.optim as optim
 from gymnasium.wrappers import RecordVideo
 
@@ -45,8 +44,8 @@ def main():
     TAU = learn_params["TAU"]
     LR = learn_params["LR"]
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    video_dir_name = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
-    env = RecordVideo(gym.make("MountainCar-v0", render_mode="rgb_array"), video_dir_name)
+    video_dir_name = "video_" + datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+    env = RecordVideo(gym.make("Acrobot-v1", render_mode="rgb_array"), video_dir_name)
     n_actions = env.action_space.n
     state, info = env.reset()
     n_observations = len(state)
@@ -58,7 +57,7 @@ def main():
     memory = ReplayMemory(10000)
 
     steps_done = 0
-    num_episodes = 2000
+    num_episodes = 200
 
     episode_durations = []
 
@@ -108,17 +107,19 @@ def main():
                     key
                 ] * TAU + target_net_state_dict[key] * (1 - TAU)
             target_net.load_state_dict(target_net_state_dict)
-
             if done:
                 episode_durations.append(t + 1)
                 break
+        
 
+    model_path = os.path.join(video_dir_name + "_model", "model.pth")
+    torch.save(policy_net_state_dict.to('cpu').state_dict(), model_path)
     print("Complete")
     durations_t = torch.tensor(episode_durations, dtype=torch.float)
     plt.xlabel("Episode")
     plt.ylabel("Duration")
     plt.plot(durations_t.numpy())
-    plt.savefig("duration.png")
+    plt.savefig("duration" + "_" + video_dir_name + ".png")
 
 
 if __name__=="__main__":
