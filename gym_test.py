@@ -12,9 +12,9 @@ import torch
 import torch.optim as optim
 from gymnasium.wrappers import RecordVideo
 
-from model import DQN, optimize_model
+from model.model import DQN, optimize_model
 from params import learn_params
-from util import ReplayMemory
+from model.util import ReplayMemory
 
 
 def parse_args():
@@ -107,6 +107,8 @@ def main(args) -> None:
             observation, reward, terminated, truncated, _ = env.step(action.item())
             reward = torch.tensor([reward], device=device)
             done = terminated or truncated
+            print(state)
+            print(observation, reward)
 
             if terminated:
                 next_state = None

@@ -1,5 +1,12 @@
 import random
 
+import torch
+import torch.optim as optim
+
+from model.model import DQN
+from dqn.learn import deep_q_learning
+from model.util import ReplayMemory
+
 
 DRAW = 2
 
@@ -70,3 +77,57 @@ class PlayerAlphaRandom:
                 return act
         i = random.randrange(len(acts))
         return acts[i]
+
+
+class PlayerDQN:
+    def __init__(self, turn, name="DQN", device="cpu"):
+        self.name = name
+        self.myturn = turn
+        self.policy_net = DQN(9, 9).to(device)
+        self.target_net = DQN(9, 9).to(device)
+        self.target_net.load_state_dict(self.policy_net.state_dict())
+        self.optimizer = optim.AdamW(self.policy_net.parameters(), lr=1e-4, amsgrad=True)
+        self.memory = ReplayMemory(10000)
+        self.device = device
+        self.train_flag = False
+
+    def getGameResult(self, winner):
+        pass
+
+    def act(self, board):
+        # acts = board.get_possible_pos()
+        state = board.board
+        action = select_action(state, self.policy_net, self.device)
+        print(action)
+        next_board = board.clone()
+        next_board.move(action, self.myturn)
+        next_state = next_board
+        if self.train_flag:
+            if board.winner == None or board.winner == 2:
+                reward = 0
+            elif board.winner == self.turn:
+                reward = 1
+            else:
+                reward = -1
+            self.policy_net, self.target_net = deep_q_learning(
+                self.policy_net, 
+                self.target_net,
+                self.memory,
+                self.optimizer,
+                state,
+                next_state,
+                reward,
+                action,)
+        return action
+
+
+def select_action(state: list, policy_net, device, eps=0.02):
+    sample = random.random()
+    if sample > eps:
+        with torch.no_grad():
+            state = torch.tensor(state, dtype=torch.float64, device=device).unsqueeze(0)
+            print(policy_net(state))
+            return int(policy_net(state))
+    else:
+        rnd = random.random()
+        return int(rnd * 9 // 9) + 1
