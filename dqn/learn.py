@@ -15,15 +15,15 @@ def deep_q_learning(
     next_state: list,
     reward,
     action,
-    device: str,
-    BATCH_SIZE: int = 128,
+    device: str='cpu',
+    BATCH_SIZE: int = 2,
     GAMMA: float = 0.99,
     TAU: float = 0.005,
 ):
-    state = torch.tensor(state, dtype=torch.float32, device=device).unsqueeze(0)
-    next_state = torch.tensor(next_state, dtype=torch.float32, device=device).unsqueeze(
-        0
-    )
+    state = torch.tensor(state, dtype=torch.float32, device=device)
+    next_state = torch.tensor(next_state, dtype=torch.float32, device=device)
+    action = torch.tensor([action], dtype=torch.float32, device=device)
+    reward = torch.tensor([reward], dtype=torch.float32, device=device)
     # Store the transition in memory
     memory.push(state, action, next_state, reward)
 
