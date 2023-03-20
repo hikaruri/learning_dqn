@@ -5,7 +5,6 @@ import torch.optim as optim
 
 from model.model import DQN
 from dqn.learn import deep_q_learning
-from model.util import ReplayMemory
 
 
 DRAW = 2
@@ -89,7 +88,6 @@ class PlayerDQN:
         self.optimizer = optim.AdamW(
             self.policy_net.parameters(), lr=1e-4, amsgrad=True
         )
-        self.memory = ReplayMemory(10000)
         self.device = device
         self.train_flag = True
 
@@ -112,10 +110,9 @@ class PlayerDQN:
                 reward = 1
             else:
                 reward = -1
-            self.policy_net, self.target_net, self.memory = deep_q_learning(
+            self.policy_net, self.target_net = deep_q_learning(
                 self.policy_net,
                 self.target_net,
-                self.memory,
                 self.optimizer,
                 state,
                 next_state,

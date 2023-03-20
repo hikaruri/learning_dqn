@@ -9,14 +9,12 @@ from model.util import ReplayMemory
 def deep_q_learning(
     policy_net: DQN,  # Q_t
     target_net: DQN,  # Q_t+1
-    memory: ReplayMemory,
     optimizer: torch.optim,
     state: list,
     next_state: list,
     reward,
     action,
     device: str='cpu',
-    BATCH_SIZE: int = 2,
     GAMMA: float = 0.99,
     TAU: float = 0.005,
 ):
@@ -25,11 +23,10 @@ def deep_q_learning(
     action = torch.tensor([action], dtype=torch.float32, device=device)
     reward = torch.tensor([reward], dtype=torch.float32, device=device)
     # Store the transition in memory
-    memory.push(state, action, next_state, reward)
 
     # Perform one step of the optimization (on the policy network)
     optimize_model(
-        memory, optimizer, policy_net, target_net, device, BATCH_SIZE, GAMMA
+        optimizer, policy_net, target_net, device, GAMMA
     )
     # Soft update of the target network's weights
     # θ′ ← τ θ + (1 −τ )θ′
@@ -40,4 +37,4 @@ def deep_q_learning(
             key
         ] * TAU + target_net_state_dict[key] * (1 - TAU)
     target_net.load_state_dict(target_net_state_dict)
-    return policy_net, target_net, memory
+    return policy_net, target_net
