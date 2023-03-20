@@ -125,9 +125,8 @@ def select_action(state: list, policy_net, device, eps=0.02):
     sample = random.random()
     if sample > eps:
         with torch.no_grad():
-            state = torch.tensor(state, dtype=torch.float64, device=device).unsqueeze(0)
-            print(policy_net(state))
-            return int(policy_net(state))
+            state = torch.tensor(state, dtype=torch.float32, device=device)
+            return int(policy_net(state).argmax())
     else:
         rnd = random.random()
         return int(rnd * 9 // 9) + 1
