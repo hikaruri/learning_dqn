@@ -19,7 +19,7 @@ def deep_q_learning(
 ):
     # Perform one step of the optimization (on the policy network)
     policy_net = optimize_model(
-        board, next_board, reward, policy_net, target_net, device, GAMMA
+        board, next_board, action, reward, policy_net, target_net, device, GAMMA
     )
     # Soft update of the target network's weights
     # θ′ ← τ θ + (1 −τ )θ′

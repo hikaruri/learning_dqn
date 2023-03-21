@@ -6,7 +6,9 @@ import torch.nn.functional as F
 import torch.optim as optim
 
 
-Transition = namedtuple("Transition", ("state", "action", "next_state", "reward"))
+Transition = namedtuple(
+    "Transition", ("state", "action", "next_state", "reward")
+)
 
 
 class DQN(nn.Module):
@@ -22,8 +24,10 @@ class DQN(nn.Module):
         return self.layer3(x)
 
 
-def optimize_model(board, next_board, reward, policy_net, target_net, device, GAMMA):
-    state_action_value = torch.tensor(
+def optimize_model(
+    board, next_board, action, reward, policy_net, target_net, device, GAMMA
+):
+    state_action_pred = torch.tensor(
         policy_net(torch.tensor(board.board, dtype=torch.float32)),
         requires_grad=True,
         dtype=torch.float32,
@@ -36,16 +40,20 @@ def optimize_model(board, next_board, reward, policy_net, target_net, device, GA
             torch.tensor(next_board.board, dtype=torch.float32)
         ).argmax()
     # Compute the expected Q values
-    expected_state_action_value = torch.tensor((next_state_value * GAMMA) + reward)
-    # print(state_action_value)
-    # print(expected_state_action_value)
-    # Compute Huber loss
+    expected_state_action_value = (next_state_value * GAMMA) + reward
+    expected_pred = state_action_pred.clone()
+    expected_pred[action] = expected_state_action_value
+    if reward != 0:
+        # print(action)
+        # print(state_action_pred)
+        # print(expected_pred)
+        print(policy_net.state_dict()["layer2.weight"])
     criterion = nn.MSELoss()
-    loss = criterion(state_action_value, expected_state_action_value)
+    loss = criterion(state_action_pred, expected_pred)
     optimizer = optim.AdamW(policy_net.parameters(), lr=1e-4, amsgrad=True)
     # Optimize the model
     optimizer.zero_grad()
     loss.backward()
     optimizer.step()
-    print(policy_net.state_dict()["layer2.weight"])
+
     return policy_net
