@@ -21,23 +21,30 @@ class DQN(nn.Module):
         return self.layer3(x)
 
 
-def optimize_model(
-    optimizer, policy_net, target_net, device, BATCH_SIZE, GAMMA
-):
-    state_action_values = policy_net(state_batch).gather(1, action_batch)
-    next_state_values = torch.zeros(BATCH_SIZE, device=device)
+def optimize_model(state, reward, optimizer, policy_net, target_net, device, GAMMA):
+    state_action_value = torch.tensor(
+        [policy_net(state).argmax()],
+        requires_grad=True,
+        dtype=torch.float32,
+        device=device,
+    )
     with torch.no_grad():
-        next_state_values[non_final_mask] = target_net(non_final_next_states).max(1)[0]
+        next_state_value = torch.tensor(
+            [target_net(state).argmax()],
+            requires_grad=False,
+            dtype=torch.float32,
+            device=device,
+        )
     # Compute the expected Q values
-    expected_state_action_values = (next_state_values * GAMMA) + reward
+    expected_state_action_value = (next_state_value * GAMMA) + reward
 
     # Compute Huber loss
-    criterion = nn.SmoothL1Loss()
-    loss = criterion(state_action_values, expected_state_action_values.unsqueeze(1))
+    criterion = nn.MSELoss()
+    loss = criterion(state_action_value, expected_state_action_value)
 
     # Optimize the model
     optimizer.zero_grad()
     loss.backward()
     # In-place gradient clipping
-    # torch.nn.utils.clip_grad_value_(policy_net.parameters(), 100)
+    torch.nn.utils.clip_grad_value_(policy_net.parameters(), 100)
     optimizer.step()

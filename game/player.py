@@ -79,7 +79,7 @@ class PlayerAlphaRandom:
 
 
 class PlayerDQN:
-    def __init__(self, turn, name="DQN", device="cpu"):
+    def __init__(self, turn, model_path=None, name="DQN", device="cpu"):
         self.name = name
         self.myturn = turn
         self.policy_net = DQN(9, 9).to(device)
@@ -90,6 +90,12 @@ class PlayerDQN:
         )
         self.device = device
         self.train_flag = True
+        if model_path is not None:
+            self.policy_net.load_state_dict(torch.load(model_path))
+            self.train_flag = False
+    
+    def save_model(self, model_path):
+        torch.save(self.policy_net.state_dict(), model_path)
 
     def getGameResult(self, winner):
         pass
@@ -103,7 +109,7 @@ class PlayerDQN:
         next_state = next_board.board
         if self.train_flag:
             if state == next_state: # invalid move
-                reward = -1.5
+                reward = -1
             elif next_board.winner == None or next_board.winner == 2:
                 reward = 0
             elif next_board.winner == self.myturn:
@@ -120,6 +126,7 @@ class PlayerDQN:
                 action,
                 self.device,
             )
+            print(self.policy_net.state_dict()['layer2.weight'][0][3])
         return action
 
 
