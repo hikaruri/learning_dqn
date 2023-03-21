@@ -22,8 +22,6 @@ def deep_q_learning(
     next_state = torch.tensor(next_state, dtype=torch.float32, device=device)
     action = torch.tensor([action], dtype=torch.float32, device=device)
     reward = torch.tensor([reward], dtype=torch.float32, device=device)
-    # Store the transition in memory
-
     # Perform one step of the optimization (on the policy network)
     optimize_model(
         state, reward, optimizer, policy_net, target_net, device, GAMMA

@@ -8,6 +8,7 @@ from dqn.learn import deep_q_learning
 
 
 DRAW = 2
+EMPTY = 0
 
 
 class PlayerHuman:
@@ -79,21 +80,20 @@ class PlayerAlphaRandom:
 
 
 class PlayerDQN:
-    def __init__(self, turn, model_path=None, name="DQN", device="cpu"):
+    def __init__(self, turn, model_path=None, eps=0.4, name="DQN", device="cpu"):
         self.name = name
         self.myturn = turn
         self.policy_net = DQN(9, 9).to(device)
         self.target_net = DQN(9, 9).to(device)
         self.target_net.load_state_dict(self.policy_net.state_dict())
-        self.optimizer = optim.AdamW(
-            self.policy_net.parameters(), lr=1e-4, amsgrad=True
-        )
+        self.optimizer = optim.SGD(self.policy_net.parameters(), lr=1e-4)
         self.device = device
         self.train_flag = True
+        self.eps = eps
         if model_path is not None:
             self.policy_net.load_state_dict(torch.load(model_path))
-            self.train_flag = False
-    
+            # self.train_flag = False
+
     def save_model(self, model_path):
         torch.save(self.policy_net.state_dict(), model_path)
 
@@ -103,17 +103,39 @@ class PlayerDQN:
     def act(self, board):
         acts = board.get_possible_pos()
         state = board.board
-        action = select_action(state, self.policy_net, self.device, acts)
+        action = select_action(state, self.policy_net, self.device, acts, self.eps)
+        invalid_count = 0
+        while state[action] != EMPTY:
+            self.policy_net, self.target_net = deep_q_learning(
+                self.policy_net,
+                self.target_net,
+                self.optimizer,
+                state,
+                state,
+                -1.5,
+                action,
+                self.device,
+            )
+            action = select_action(state, self.policy_net, self.device, acts, self.eps)
+            invalid_count += 1
+            if invalid_count > 10:
+                # print("Exceed Pos Find" + str(board.board) + " with " + str(action))
+                rnd = random.random()
+                indices_num = len(acts)
+                action = acts[int(rnd * indices_num // indices_num)]
+        if self.eps > 0.0001:
+            self.eps -= 0.0001
+        # print(self.eps)
         next_board = board.clone()
         next_board.move(action, self.myturn)
         next_state = next_board.board
         if self.train_flag:
-            if state == next_state: # invalid move
-                reward = -1
-            elif next_board.winner == None or next_board.winner == 2:
+            if next_board.winner == None:
                 reward = 0
             elif next_board.winner == self.myturn:
                 reward = 1
+            elif next_board.winner == DRAW:
+                reward = 0
             else:
                 reward = -1
             self.policy_net, self.target_net = deep_q_learning(
@@ -126,11 +148,11 @@ class PlayerDQN:
                 action,
                 self.device,
             )
-            print(self.policy_net.state_dict()['layer2.weight'][0][3])
+            # print(self.policy_net.state_dict()["layer2.weight"][0][12])
         return action
 
 
-def select_action(state: list, policy_net, device, acts, eps=0.02):
+def select_action(state: list, policy_net, device, acts, eps=0.1):
     sample = random.random()
     if sample > eps:
         with torch.no_grad():
