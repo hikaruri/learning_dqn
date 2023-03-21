@@ -1,7 +1,6 @@
 import random
 
 import torch
-import torch.optim as optim
 
 from model.model import DQN
 from dqn.learn import deep_q_learning
@@ -86,7 +85,6 @@ class PlayerDQN:
         self.policy_net = DQN(9, 9).to(device)
         self.target_net = DQN(9, 9).to(device)
         self.target_net.load_state_dict(self.policy_net.state_dict())
-        self.optimizer = optim.SGD(self.policy_net.parameters(), lr=1e-4)
         self.device = device
         self.train_flag = True
         self.eps = eps
@@ -102,21 +100,19 @@ class PlayerDQN:
 
     def act(self, board):
         acts = board.get_possible_pos()
-        state = board.board
-        action = select_action(state, self.policy_net, self.device, acts, self.eps)
+        action = select_action(board, self.policy_net, self.device, acts, self.eps)
         invalid_count = 0
-        while state[action] != EMPTY:
+        while board.board[action] != EMPTY:
             self.policy_net, self.target_net = deep_q_learning(
                 self.policy_net,
                 self.target_net,
-                self.optimizer,
-                state,
-                state,
-                -1.5,
+                board,
+                board,
+                -1,
                 action,
                 self.device,
             )
-            action = select_action(state, self.policy_net, self.device, acts, self.eps)
+            action = select_action(board, self.policy_net, self.device, acts, self.eps)
             invalid_count += 1
             if invalid_count > 10:
                 # print("Exceed Pos Find" + str(board.board) + " with " + str(action))
@@ -128,7 +124,6 @@ class PlayerDQN:
         # print(self.eps)
         next_board = board.clone()
         next_board.move(action, self.myturn)
-        next_state = next_board.board
         if self.train_flag:
             if next_board.winner == None:
                 reward = 0
@@ -141,9 +136,8 @@ class PlayerDQN:
             self.policy_net, self.target_net = deep_q_learning(
                 self.policy_net,
                 self.target_net,
-                self.optimizer,
-                state,
-                next_state,
+                board,
+                next_board,
                 reward,
                 action,
                 self.device,
@@ -152,11 +146,11 @@ class PlayerDQN:
         return action
 
 
-def select_action(state: list, policy_net, device, acts, eps=0.1):
+def select_action(board, policy_net, device, acts, eps=0.1):
     sample = random.random()
     if sample > eps:
         with torch.no_grad():
-            state = torch.tensor(state, dtype=torch.float32, device=device)
+            state = torch.tensor(board.board, dtype=torch.float32, device=device)
             return int(policy_net(state).argmax())
     else:
         rnd = random.random()

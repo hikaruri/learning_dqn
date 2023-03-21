@@ -9,22 +9,17 @@ from model.util import ReplayMemory
 def deep_q_learning(
     policy_net: DQN,  # Q_t
     target_net: DQN,  # Q_t+1
-    optimizer: torch.optim,
-    state: list,
-    next_state: list,
+    board: list,
+    next_board: list,
     reward,
     action,
     device: str='cpu',
     GAMMA: float = 0.99,
     TAU: float = 0.005,
 ):
-    state = torch.tensor(state, dtype=torch.float32, device=device)
-    next_state = torch.tensor(next_state, dtype=torch.float32, device=device)
-    action = torch.tensor([action], dtype=torch.float32, device=device)
-    reward = torch.tensor([reward], dtype=torch.float32, device=device)
     # Perform one step of the optimization (on the policy network)
-    optimize_model(
-        state, reward, optimizer, policy_net, target_net, device, GAMMA
+    policy_net = optimize_model(
+        board, next_board, reward, policy_net, target_net, device, GAMMA
     )
     # Soft update of the target network's weights
     # θ′ ← τ θ + (1 −τ )θ′

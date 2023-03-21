@@ -27,7 +27,7 @@ def parse_args():
     )
     parser.add_argument(
         "--train",
-        action='store_true',
+        action="store_true",
         help="Train mode",
     )
     parser.add_argument(
@@ -38,6 +38,7 @@ def parse_args():
     )
     args = parser.parse_args()
     return args
+
 
 def select_action(
     env, state, policy_net, steps_done, device, EPS_END, EPS_START, EPS_DECAY
@@ -67,9 +68,11 @@ def main(args) -> None:
     TAU = learn_params["TAU"]
     LR = learn_params["LR"]
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    time_stamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+    time_stamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
     video_dir_name = "video_" + time_stamp
-    env = RecordVideo(gym.make("CartPole-v1", render_mode="rgb_array"), video_dir_name)
+    env = RecordVideo(
+        gym.make("CartPole-v1", render_mode="rgb_array"), video_dir_name
+    )
     n_actions = env.action_space.n
     state, info = env.reset()
     n_observations = len(state)
@@ -92,7 +95,9 @@ def main(args) -> None:
     for i_episode in range(num_episodes):
         # Initialize the environment and get it's state
         state, info = env.reset()
-        state = torch.tensor(state, dtype=torch.float32, device=device).unsqueeze(0)
+        state = torch.tensor(
+            state, dtype=torch.float32, device=device
+        ).unsqueeze(0)
         for t in count():
             action, steps_done = select_action(
                 env,
@@ -104,7 +109,9 @@ def main(args) -> None:
                 EPS_START,
                 EPS_DECAY,
             )
-            observation, reward, terminated, truncated, _ = env.step(action.item())
+            observation, reward, terminated, truncated, _ = env.step(
+                action.item()
+            )
             reward = torch.tensor([reward], device=device)
             done = terminated or truncated
             print(state)
@@ -126,7 +133,13 @@ def main(args) -> None:
             if args.train:
                 # Perform one step of the optimization (on the policy network)
                 optimize_model(
-                    memory, optimizer, policy_net, target_net, device, BATCH_SIZE, GAMMA
+                    memory,
+                    optimizer,
+                    policy_net,
+                    target_net,
+                    device,
+                    BATCH_SIZE,
+                    GAMMA,
                 )
 
                 # Soft update of the target network's weights
@@ -142,12 +155,12 @@ def main(args) -> None:
                 episode_durations.append(t + 1)
                 break
     print("Complete")
-    
+
     if args.train:
         model_dir_name = "model_" + time_stamp
         os.makedirs(model_dir_name, exist_ok=True)
         model_path = os.path.join(model_dir_name, "model.pth")
-        torch.save(policy_net.to('cpu').state_dict(), model_path)
+        torch.save(policy_net.to("cpu").state_dict(), model_path)
         print("saved model")
 
     durations_t = torch.tensor(episode_durations, dtype=torch.float)
@@ -157,6 +170,6 @@ def main(args) -> None:
     plt.savefig("duration" + "_" + time_stamp + ".png")
 
 
-if __name__=="__main__":
+if __name__ == "__main__":
     args = parse_args()
     main(args)
