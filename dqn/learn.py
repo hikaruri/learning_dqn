@@ -1,9 +1,4 @@
-import random
-
-import torch
-
 from model.model import DQN, optimize_model
-from model.util import ReplayMemory
 
 
 def deep_q_learning(

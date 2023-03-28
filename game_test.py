@@ -16,7 +16,7 @@ def Alpha_vs_DQN():
     PLAYER_O = -1
     p1 = PlayerAlphaRandom(PLAYER_X)
     p2 = PlayerDQN(PLAYER_O, eps=0.4)
-    game = TTT_GameOrganizer(p1, p2, 100000, False, False)
+    game = TTT_GameOrganizer(p1, p2, 10000, False, False)
     game.progress()
     p2.save_model("./model.cpt")
 
@@ -41,6 +41,6 @@ def DQN_vs_DQN():
 
 
 if __name__ == "__main__":
-    Alpha_vs_DQN()
-    # DQN_vs_DQN()
+    # Alpha_vs_DQN()
+    DQN_vs_DQN()
     Human_vs_DQN()
