@@ -43,4 +43,4 @@ def DQN_vs_DQN():
 if __name__ == "__main__":
     # Alpha_vs_DQN()
     DQN_vs_DQN()
-    Human_vs_DQN()
+    # Human_vs_DQN()

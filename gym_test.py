@@ -12,7 +12,7 @@ import torch
 import torch.optim as optim
 from gymnasium.wrappers import RecordVideo
 
-from model.model import DQN, optimize_model
+from model.model import DQN, optimize_model_for_gym
 from params import learn_params
 from model.util import ReplayMemory
 
@@ -132,7 +132,7 @@ def main(args) -> None:
 
             if args.train:
                 # Perform one step of the optimization (on the policy network)
-                optimize_model(
+                optimize_model_for_gym(
                     memory,
                     optimizer,
                     policy_net,

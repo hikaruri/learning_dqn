@@ -11,6 +11,8 @@ python = "^3.9"
 numpy = "^1.12.6"
 torch = "^1.13.1"
 gymnasium = "^0.29.1"
+moviepy = "^1.0.3"
+pygame = "^2.5.2"
 
 
 [tool.poetry.dev-dependencies]
