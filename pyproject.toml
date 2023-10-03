@@ -10,6 +10,7 @@ packages = [{include = "learning_dqn"}]
 python = "^3.9"
 numpy = "^1.12.6"
 torch = "^1.13.1"
+gymnasium = "^0.29.1"
 
 
 [tool.poetry.dev-dependencies]
